@@ -1,0 +1,36 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="polymer-tilt">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h2>Hello [[prop1]]!</h2>
+  </template>
+
+  <script>
+    /**
+     * `polymer-tilt`
+     * Parallax tilt hover effect for Polymer Component
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class PolymerTilt extends Polymer.Element {
+      static get is() { return 'polymer-tilt'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'polymer-tilt'
+          }
+        };
+      }
+    }
+
+    window.customElements.define(PolymerTilt.is, PolymerTilt);
+  </script>
+</dom-module>
