@@ -22,7 +22,30 @@
       <h3>Basic polymer-tilt demo</h3>
       <demo-snippet>
         <template>
-          <polymer-tilt></polymer-tilt>
+          <style>
+            .tilt {
+              position: relative;
+              display: block;
+              width: 100%;
+              height: 200px;
+              background-color: #08AEEA;
+              background-image: linear-gradient(to top, #08AEEA 0%, #2AF598 100%);
+              transform-style: preserve-3d;
+            }
+            .tilt-inner {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              color: white;
+              font-size: 20px;
+              transform: translateZ(50px) translateY(-50%) translateX(-50%);
+            }
+          </style>
+          <polymer-tilt glare reset>
+            <div slot="tilt" class="tilt">
+              <div class="tilt-inner">Basic polymer-tilt demo</div>
+            </div>
+          </polymer-tilt>
         </template>
       </demo-snippet>
     </div>

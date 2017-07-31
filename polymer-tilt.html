@@ -1,13 +1,40 @@
 <link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/utils/async.html">
 
 <dom-module id="polymer-tilt">
   <template>
     <style>
       :host {
+        position: relative;
         display: block;
+        overflow: hidden;
+      }
+
+      .tilt-glare {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .tilt-glare-inner {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        pointer-events: none;
+        background-image: linear-gradient(0deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+        transform: rotate(180deg) translate(-50%, -50%);
+        transform-origin: 0 0;
+        opacity: 0;
       }
     </style>
-    <h2>Hello [[prop1]]!</h2>
+    <slot name="tilt"></slot>
+    <!-- glare -->
+    <template is="dom-if" if="[[glare]]">
+      <div class="tilt-glare">
+        <div class="tilt-glare-inner"></div>
+      </div>
+    </template>
   </template>
 
   <script>
@@ -23,11 +50,216 @@
       static get is() { return 'polymer-tilt'; }
       static get properties() {
         return {
-          prop1: {
+          // max tilt rotation (degrees)
+          maxTilt: {
+            type: Number,
+            value: 10
+          },
+          // Transform perspective, the lower the more extreme the tilt gets
+          perspective: {
+            type: Number,
+            value: 1000
+          },
+          // Easing on enter/exit
+          easing: {
             type: String,
-            value: 'polymer-tilt'
+            value: 'cubic-bezier(.03,.98,.52,.99)'
+          },
+          // 2 = 200%, 1.5 = 150%, etc..
+          scale: {
+            type: Number,
+            value: 1
+          },
+          // Speed of the enter/exit transition.
+          speed: {
+            type: Number,
+            value: 600
+          },
+          // What axis should be disabled. Can be X or Y.
+          axis: {
+            type: String,
+            value: null // 'x', 'y'
+          },
+          // If the tilt effect has to be reset on exit.
+          reset: {
+            type: Boolean,
+            value: false
+          },
+          // Enables glare effect
+          glare: {
+            type: Boolean,
+            value: false
+          },
+          // From 0 - 1
+          maxGlare: {
+            type: Number,
+            value: 1
           }
         };
+      }
+
+      constructor() {
+        super();
+
+        this._width = null;
+        this._height = null;
+        this._left = null;
+        this._top = null;
+        this._ticking = false;
+
+        this.element = null;
+        this.glareElement = null;
+
+        // Events
+        this._addEvents();
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+
+        this.element = this.querySelector('[slot="tilt"]');
+        if (this.glare) {
+          Polymer.Async.microTask.run(this._prepareGlare.bind(this));
+        }
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback();
+        this._removeEvents();
+      }
+
+      destroy() {
+        this._transitionTimeout && clearTimeout(this._transitionTimeout);
+        this._resetAll();
+        this._removeEvents();
+      }
+
+      _resetAll() {
+        this.element.style['transform'] = `perspective(${this.perspective}px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+
+        if (this.glare) {
+          this.glareElement.style.transform = 'rotate(180deg) translate(-50%, -50%)';
+          this.glareElement.style.opacity = '0';
+        }
+      }
+
+      _addEvents() {
+        this.onMouseEnterBind = this._onMouseEnter.bind(this);
+        this.onMouseMoveBind = this._onMouseMove.bind(this);
+        this.onMouseLeaveBind = this._onMouseLeave.bind(this);
+        this.onWindowResizeBind = this._onWindowResize.bind(this);
+
+        this.addEventListener('mouseenter', this.onMouseEnterBind);
+        this.addEventListener('mousemove', this.onMouseMoveBind);
+        this.addEventListener('mouseleave', this.onMouseLeaveBind);
+        if (this.glare) {
+          window.addEventListener('resize', this.onWindowResizeBind);
+        }
+      }
+
+      _removeEvents() {
+        this.removeEventListener('mouseenter', this.onMouseEnterBind);
+        this.removeEventListener('mousemove', this.onMouseMoveBind);
+        this.removeEventListener('mouseleave', this.onMouseLeaveBind);
+        if (this.glare) {
+          window.removeEventListener('resize', this.onWindowResizeBind);
+        }
+      }
+
+      _onMouseEnter(event) {
+        this._updateElementPosition();
+        this.element.style['will-change'] = 'transform';
+        this._setTransition();
+      }
+      _onMouseMove(event) {
+        this.event = event;
+        this._requestTick();
+      }
+      _onMouseLeave(event) {
+        this._setTransition();
+        if (this.reset) {
+          requestAnimationFrame(this._resetAll.bind(this));
+        }
+      }
+      _onWindowResize() {
+        this._updateGlareSize();
+      }
+
+      _updateElementPosition() {
+        let rect = this.element.getBoundingClientRect();
+        this._width = this.element.offsetWidth;
+        this._height = this.element.offsetHeight;
+        this._left = rect.left;
+        this._top = rect.top;
+      }
+
+      _setTransition() {
+        this._transitionTimeout && clearTimeout(this._transitionTimeout);
+        this.element.style['transition'] = `${this.speed}ms ${this.easing}`;
+        if (this.glare) {
+          this.glareElement.style['transition'] = `opacity ${this.speed}ms ${this.easing}`;
+        }
+        this._transitionTimeout = setTimeout(() => {
+          this.element.style['transition'] = '';
+          if (this.glare) {
+            this.glareElement.style['transition'] = '';
+          }
+        }, this.speed);
+      }
+
+      _requestTick() {
+        if (this._ticking) {
+          return;
+        }
+        requestAnimationFrame(this._update.bind(this))
+        this._ticking = true;
+      }
+
+      _getValues() {
+        let x = (this.event.clientX - this._left) / this._width;
+        let y = (this.event.clientY - this._top) / this._height;
+
+        x = Math.min(Math.max(x, 0), 1);
+        y = Math.min(Math.max(y, 0), 1);
+
+        let tiltX = (-1 * (this.maxTilt / 2 - x * this.maxTilt)).toFixed(2);
+        let tiltY = (-1 * (y * this.maxTilt - this.maxTilt / 2)).toFixed(2);
+        let angle = Math.atan2(this.event.clientX - (this._left + this._width / 2), -(this.event.clientY - (this._top + this._height / 2))) * (180 / Math.PI);
+
+        return {
+          tiltX: tiltX,
+          tiltY: tiltY,
+          percentageX: x * 100,
+          percentageY: y * 100,
+          angle: angle
+        };
+      }
+
+      _update() {
+        let values = this._getValues();
+        this.element.style['transform'] = `perspective(${this.perspective}px) ` +
+          `rotateX(${this.axis === 'x' ? 0 : values.tiltY}deg) ` +
+          `rotateY(${this.axis === 'y' ? 0 : values.tiltX}deg) ` +
+          `scale3d(${this.scale}, ${this.scale}, ${this.scale})`;
+
+        if (this.glare) {
+          this.glareElement.style.transform = `rotate(${values.angle}deg) translate(-50%, -50%)`;
+          this.glareElement.style.opacity = `${values.percentageY * this.maxGlare / 100}`;
+        }
+
+        this._ticking = false;
+      }
+
+      _prepareGlare() {
+        this.glareElement = this.shadowRoot.querySelector('.tilt-glare-inner');
+        this._updateGlareSize();
+      }
+
+      _updateGlareSize() {
+        Object.assign(this.glareElement.style, {
+          'width': `${this.element.offsetWidth * 2}px`,
+          'height': `${this.element.offsetWidth * 2}px`,
+        });
       }
     }
 
