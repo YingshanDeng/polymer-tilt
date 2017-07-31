@@ -1,5 +1,4 @@
 <link rel="import" href="../polymer/polymer-element.html">
-<link rel="import" href="../polymer/lib/utils/async.html">
 
 <dom-module id="polymer-tilt">
   <template>
@@ -119,7 +118,7 @@
 
         this.element = this.querySelector('[slot="tilt"]');
         if (this.glare) {
-          Polymer.Async.microTask.run(this._prepareGlare.bind(this));
+          setTimeout(this._prepareGlare.bind(this));
         }
       }
 

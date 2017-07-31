@@ -1,5 +1,7 @@
 # \<polymer-tilt\>
 
+[![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/YingshanDeng/polymer-tilt)
+
 Parallax tilt hover effect for Polymer Component, Inspired by [gijsroge/tilt.js](https://github.com/gijsroge/tilt.js), A tiny 60+fps parallax tilt hover effect for jQuery.
 
 ## Usage
@@ -8,7 +10,7 @@ Parallax tilt hover effect for Polymer Component, Inspired by [gijsroge/tilt.js]
 <custom-element-demo>
   <template>
   <link rel="import" href="polymer-tilt.html">
-	<style is="custom-style" include="demo-pages-shared-styles">
+  <style is="custom-style" include="demo-pages-shared-styles">
     .tilt {
       position: relative;
       display: block;
@@ -27,7 +29,7 @@ Parallax tilt hover effect for Polymer Component, Inspired by [gijsroge/tilt.js]
       transform: translateZ(50px) translateY(-50%) translateX(-50%);
     }
   </style>
-	<next-code-block></next-code-block>
+  <next-code-block></next-code-block>
   </template>
 </custom-element-demo>
 ```
