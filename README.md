@@ -4,6 +4,13 @@
 
 Parallax tilt hover effect for Polymer Component, Inspired by [gijsroge/tilt.js](https://github.com/gijsroge/tilt.js), A tiny 60+fps parallax tilt hover effect for jQuery.
 
+![](http://7vikhl.com1.z0.glb.clouddn.com/polymer-tilt.gif)
+
+## Installation
+```
+bower install --save polymer-tilt
+```
+
 ## Usage
 <!--
 ```
@@ -35,7 +42,7 @@ Parallax tilt hover effect for Polymer Component, Inspired by [gijsroge/tilt.js]
 ```
 -->
 ```html
-<polymer-tilt glare reset>
+<polymer-tilt reset>
   <div slot="tilt" class="tilt">
     <div class="tilt-inner">Basic polymer-tilt demo</div>
   </div>

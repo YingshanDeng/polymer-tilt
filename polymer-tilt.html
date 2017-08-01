@@ -136,7 +136,7 @@
       _resetAll() {
         this.element.style['transform'] = `perspective(${this.perspective}px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
 
-        if (this.glare) {
+        if (this.glare && this.glareElement) {
           this.glareElement.style.transform = 'rotate(180deg) translate(-50%, -50%)';
           this.glareElement.style.opacity = '0';
         }
@@ -195,12 +195,12 @@
       _setTransition() {
         this._transitionTimeout && clearTimeout(this._transitionTimeout);
         this.element.style['transition'] = `${this.speed}ms ${this.easing}`;
-        if (this.glare) {
+        if (this.glare && this.glareElement) {
           this.glareElement.style['transition'] = `opacity ${this.speed}ms ${this.easing}`;
         }
         this._transitionTimeout = setTimeout(() => {
           this.element.style['transition'] = '';
-          if (this.glare) {
+          if (this.glare && this.glareElement) {
             this.glareElement.style['transition'] = '';
           }
         }, this.speed);
@@ -241,7 +241,7 @@
           `rotateY(${this.axis === 'y' ? 0 : values.tiltX}deg) ` +
           `scale3d(${this.scale}, ${this.scale}, ${this.scale})`;
 
-        if (this.glare) {
+        if (this.glare && this.glareElement) {
           this.glareElement.style.transform = `rotate(${values.angle}deg) translate(-50%, -50%)`;
           this.glareElement.style.opacity = `${values.percentageY * this.maxGlare / 100}`;
         }
@@ -255,10 +255,12 @@
       }
 
       _updateGlareSize() {
-        Object.assign(this.glareElement.style, {
-          'width': `${this.element.offsetWidth * 2}px`,
-          'height': `${this.element.offsetWidth * 2}px`,
-        });
+        if (glareElement) {
+          Object.assign(this.glareElement.style, {
+            'width': `${this.element.offsetWidth * 2}px`,
+            'height': `${this.element.offsetWidth * 2}px`,
+          });
+        }
       }
     }
 
